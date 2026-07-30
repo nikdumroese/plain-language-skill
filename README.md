@@ -9,8 +9,8 @@ MIT licensed. No dependencies.
 ## Contents
 
 1. [What the skill does](#what-the-skill-does)
-2. [Before and after](#before-and-after)
-3. [Install](#install)
+2. [Install](#install)
+3. [Before and after](#before-and-after)
 4. [The four principles](#the-four-principles)
 5. [Anti-patterns the skill blocks](#anti-patterns-the-skill-blocks)
 6. [Document types](#document-types)
@@ -30,6 +30,33 @@ When loaded into an agent, the skill:
 5. Provides an adaptive template for common technical document types.
 
 The skill does not push reader testing for internal memos. It is available for the rare external document that warrants it.
+
+## Install
+
+The skill is distributed through the [skills CLI](https://github.com/vercel-labs/skills).
+
+```bash
+npx skills add nikdumroese/plain-language-skill
+```
+
+The CLI detects which agents you have installed and offers to install for each. To try the skill without installing:
+
+```bash
+npx skills use nikdumroese/plain-language-skill@plain-language-iso-24495
+```
+
+Once installed, invoke by asking for a document (*"draft a decision memo for X"*) or a rewrite (*"rewrite this using plain language"*).
+
+### No terminal (Claude.ai)
+
+1. Download [`SKILL.md`](skills/plain-language-iso-24495/SKILL.md).
+2. In Claude.ai (paid plan), open **Settings → Capabilities** and turn on code execution.
+3. Open **Settings → Customize → Skills → Upload** and upload the file.
+4. Turn the skill on.
+
+### No skill support (ChatGPT, Gemini, other)
+
+Copy [`prompts/system-prompt.md`](prompts/system-prompt.md) into the platform's custom-instruction field.
 
 ## Before and after
 
@@ -75,33 +102,6 @@ For a prompt with missing reader information, the model asks for it before draft
 The baseline invents plausible content. The skill refuses to write until it has the reader, the numbers, and the response mechanism.
 
 For an RFC prompt with more content, the baseline produces a generic RFC. The skill produces a structured document with an "Are you the right reader?" gate, per-team action items with time estimates, an alternatives-considered table, and explicit success criteria. Full outputs: [`examples/generated-before-after.md`](examples/generated-before-after.md).
-
-## Install
-
-The skill is distributed through the [skills CLI](https://github.com/vercel-labs/skills).
-
-```bash
-npx skills add nikdumroese/plain-language-skill
-```
-
-The CLI detects which agents you have installed and offers to install for each. To try the skill without installing:
-
-```bash
-npx skills use nikdumroese/plain-language-skill@plain-language-iso-24495
-```
-
-Once installed, invoke by asking for a document (*"draft a decision memo for X"*) or a rewrite (*"rewrite this using plain language"*).
-
-### No terminal (Claude.ai)
-
-1. Download [`SKILL.md`](skills/plain-language-iso-24495/SKILL.md).
-2. In Claude.ai (paid plan), open **Settings → Capabilities** and turn on code execution.
-3. Open **Settings → Customize → Skills → Upload** and upload the file.
-4. Turn the skill on.
-
-### No skill support (ChatGPT, Gemini, other)
-
-Copy [`prompts/system-prompt.md`](prompts/system-prompt.md) into the platform's custom-instruction field.
 
 ## The four principles
 
