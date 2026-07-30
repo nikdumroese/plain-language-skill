@@ -101,7 +101,7 @@ For a prompt with missing reader information, the model asks for it before draft
 
 The baseline invents plausible content. The skill refuses to write until it has the reader, the numbers, and the response mechanism.
 
-For an RFC prompt with more content, the baseline produces a generic RFC. The skill produces a structured document with an "Are you the right reader?" gate, per-team action items with time estimates, an alternatives-considered table, and explicit success criteria. Full outputs: [`examples/generated-before-after.md`](examples/generated-before-after.md).
+For an RFC prompt with more content, the baseline produces a generic RFC. The skill produces a structured document with a multi-audience routing block, per-team action items with time estimates, an alternatives-considered table, and explicit success criteria. Full outputs: [`examples/generated-before-after.md`](examples/generated-before-after.md).
 
 ## The four principles
 

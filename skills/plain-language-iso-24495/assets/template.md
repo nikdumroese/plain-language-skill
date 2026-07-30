@@ -11,6 +11,8 @@
 
 ## Are you the right reader?
 
+*(Include this section if the document has multiple audiences. Alternatives: a routing table, or clearly labelled per-audience sections. Skip for single-audience documents.)*
+
 Read this document if any of the following is true:
 
 - You [decision this reader makes].

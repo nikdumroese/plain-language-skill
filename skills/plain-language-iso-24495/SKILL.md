@@ -69,12 +69,21 @@ Every document must include:
 
 1. **Headline** stating what the document is and what it asks for.
 2. **Header block** with author, date (`YYYY-MM-DD`), version, status, reading time, and reader groups. `assets/template.md` shows the shape.
-3. **"Are you the right reader?" section** listing reader groups. Skip for single-audience documents.
-4. **Main content** grouped by reader need, not by author's mental hierarchy.
-5. **Warnings** before the instructions they warn about.
-6. **Glossary** or inline definitions for technical terms the primary reader may not know.
-7. **Response mechanism** stating how the reader should respond or act.
-8. **Related documents** section at the end.
+3. **Main content** grouped by reader need, not by author's mental hierarchy.
+4. **Warnings** before the instructions they warn about.
+5. **Glossary** or inline definitions for technical terms the primary reader may not know.
+6. **Response mechanism** stating how the reader should respond or act.
+7. **Related documents** section at the end.
+
+### Multi-audience routing (recommended, not required)
+
+When a document has more than one reader group, help each reader find their section quickly. ISO 24495 requires that structure supports findability but does not prescribe a specific pattern. Pick one:
+
+- **"Are you the right reader?" section** listing reader groups and what each is asked to do. Good default for approval memos.
+- **Routing table** at the top: audience → section. Good for reference docs with many audiences.
+- **Labelled sections by audience** with a one-line pointer in the summary. Good for short documents.
+
+Skip for single-audience documents.
 
 ## Anti-patterns
 
