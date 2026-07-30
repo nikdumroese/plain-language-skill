@@ -1,20 +1,12 @@
 # Before / after — real samples
 
-**Generated:** 2026-07-30 11:06 CEST
+**Generated:** 2026-07-30 11:17 CEST
 **Runner:** pi 0.82.0
 **Provider / model:** `github-copilot / claude-sonnet-5`
 
-Both runs use the same model and the same prompt. Neither has access to CLAUDE.md, auto-discovered skills, or project context. The only difference is whether the plain-language skill is loaded.
+Both runs use the same runner, the same model, and the same prompt. Neither has access to CLAUDE.md, auto-discovered skills, or project context. The only difference is whether the plain-language skill is in the system prompt.
 
-Baseline command:
-```
-pi -p -nc -ns -nt --provider github-copilot --model claude-sonnet-5 '<prompt>'
-```
-
-With-skill command (skill content concatenated into system prompt):
-```
-pi -p -nc -ns -nt --append-system-prompt "$(cat <skill-files>)" --provider github-copilot --model claude-sonnet-5 '<prompt>'
-```
+Regenerate with `./evals/run.sh`. Override the runner with `RUNNER=claude ./evals/run.sh` or the model with `MODEL=... ./evals/run.sh`.
 
 ---
 
@@ -25,7 +17,7 @@ pi -p -nc -ns -nt --append-system-prompt "$(cat <skill-files>)" --provider githu
 ### Baseline (no skill)
 
 ````markdown
-# MEMO
+# Memo: Approval Request — Migrate Payment Processing from Stripe to Adyen
 
 **To:** Leadership Team
 **From:** [Your Name], [Your Title]
@@ -34,48 +26,56 @@ pi -p -nc -ns -nt --append-system-prompt "$(cat <skill-files>)" --provider githu
 
 ## Recommendation
 
-Approve migrating our payment processing from Stripe to Adyen. The migration will take six weeks and requires sign-off from Legal, Security, and Finance before we start.
+We recommend migrating our payment processing from Stripe to Adyen. This memo asks for approval to proceed, along with sign-off from Legal, Security, and Finance.
 
-## Why we should switch
+## Why We Want to Switch
 
-**Lower cost.** Adyen's pricing will reduce our payment processing fees.
+**Lower costs.** Adyen's pricing structure will reduce our payment processing fees.
 
-**Faster payments in Europe.** Adyen processes European transactions closer to our customers, cutting latency and improving checkout speed for EU users.
-
-## What we need from you
-
-Approval to proceed, plus sign-off from three teams:
-
-- **Legal** — review the Adyen contract and data terms
-- **Security** — assess Adyen's security posture and our integration approach
-- **Finance** — confirm the cost savings and approve the budget for migration work
+**Better performance in Europe.** Adyen has stronger infrastructure in Europe, which will reduce latency for our European customers and improve their checkout experience.
 
 ## Timeline
 
-Six weeks from approval to completion, assuming Legal, Security, and Finance sign off before work begins. We'll share a detailed schedule once approved.
+The migration will take **six weeks** from approval to completion.
 
-## Next steps
+## What We Need Before Starting
 
-1. Leadership approves the migration
-2. Legal, Security, and Finance complete their reviews
-3. Engineering begins the six-week migration
+Three teams must review and approve this change before we begin:
 
-Please let me know if you have questions or need more detail before deciding.
+1. **Legal** — to review the new vendor contract and data terms
+2. **Security** — to review Adyen's security practices and confirm they meet our standards
+3. **Finance** — to confirm the cost savings and approve the new billing arrangement
+
+## Next Steps
+
+1. Leadership approves moving forward with this memo
+2. We schedule reviews with Legal, Security, and Finance
+3. Once all three sign off, we begin the six-week migration
+
+## Ask
+
+Please approve this migration so we can start the review process with Legal, Security, and Finance.
+
+---
+
+*Questions? Contact [Your Name] at [email/phone].*
 
 ````
 
 ### With plain-language skill
 
 ````markdown
-Before I draft this, I need a few concrete details — plain language requires numbers, not vague claims, and the standard says to confirm the reader before writing.
+Before I draft this, I need a few concrete details — plain language requires numbers, not vague claims ("saves cost", "improves latency" aren't specific enough to write without hedging or guessing).
 
-1. **Numbers**: What's the actual cost saving (e.g., "$/month" or "%") and the actual latency improvement (e.g., "current p95 ms → target p95 ms")? I won't write "significant savings" or "faster" — I need figures or a placeholder you'll fill in.
-2. **Primary reader**: Is this memo aimed at one leader (e.g., CFO or CTO) who makes the final call, with Legal/Security/Finance as required sign-offs? Or is it a joint decision by all three plus leadership?
-3. **Project owner**: Who owns the migration itself (a name/team) — the person Legal/Security/Finance should route questions to?
-4. **Risk/warning**: Is there anything the reader must know before approving — e.g., downtime window, dual-running period, data migration risk, contract termination cost with Stripe? Plain language puts warnings before instructions, so I need to know if one exists.
-5. **Response mechanism**: How should each of Legal, Security, and Finance actually respond — reply in a thread, sign a form, attend a meeting? And by when?
+Could you confirm:
 
-Give me what you have (placeholders like "$X/month" are fine if the real number isn't settled) and I'll write the full memo.
+1. **Cost savings** — a number or range (e.g., "$18k/year" or "~30% lower processing fees").
+2. **Latency improvement** — current vs. expected (e.g., "180ms → 60ms for EU transactions").
+3. **Your name/role and today's date**, for the memo header.
+4. **Response mechanism** — how should Legal, Security, and Finance actually respond? (e.g., reply-all with "Approved", a sign-off form, a meeting on a specific date?)
+5. **Any known risk or downtime** during the six-week migration that needs a warning before the plan?
+
+Once I have these, I'll write the full memo.
 
 ````
 
@@ -90,235 +90,183 @@ Give me what you have (placeholders like "$X/month" are fine if the real number 
 ````markdown
 # RFC: Adopt Temporal for Background Job Orchestration
 
-**Status:** Draft for discussion
-**Audience:** Engineering leadership
+**Status:** Draft
 **Author:** [Your name]
-**Date:** [Date]
+**Audience:** Engineering Leadership
+**Ask:** Approve a pilot migration from Sidekiq + cron to Temporal for one service, with a decision on broader rollout after 6 weeks.
 
 ## Summary
 
-We propose replacing our current background job setup — a mix of Sidekiq and cron — with Temporal. Temporal is a workflow orchestration system that handles retries, scheduling, and long-running processes in a more reliable and observable way than what we have today.
+We propose replacing our current mix of Sidekiq and cron with Temporal for background job orchestration. Temporal gives us reliable retries, visibility into long-running workflows, and a single system instead of two. We want to pilot it on one service before committing company-wide.
 
-## The Problem
+## The problem
 
-Our background job logic is spread across two systems that don't talk to each other:
+Today we run background work two ways:
 
-- **Sidekiq** handles most async jobs (emails, webhooks, data processing).
-- **Cron** handles scheduled tasks (nightly reports, cleanup jobs, syncs).
+- **Sidekiq** for discrete jobs (send an email, resize an image, sync a record).
+- **Cron** for scheduled tasks and multi-step processes (nightly billing runs, data reconciliation, onboarding sequences).
 
 This split causes real problems:
 
-1. **No unified visibility.** We can't see the full picture of a business process (e.g., "onboard a new customer") because parts of it run in Sidekiq and parts run in cron, with no shared state or tracing.
-2. **Fragile multi-step workflows.** When a job needs to do several things in sequence — call an API, wait, then call another API — we hand-roll retry logic, state tracking, and failure handling in application code. This logic is duplicated and inconsistent across teams.
-3. **Silent failures.** Cron jobs that fail often fail silently unless someone built custom alerting. We've had incidents where a job silently stopped running for weeks.
-4. **No built-in durability.** If a Sidekiq worker crashes mid-job, we can lose progress or duplicate work, depending on how idempotent the job happens to be.
-5. **Scaling scheduling is manual.** Adding a new scheduled job means editing crontab or an infra config, deploying, and hoping it's right. There's no self-service way for a team to safely add or modify schedules.
+1. **Multi-step processes are fragile.** A billing run might touch five services over 20 minutes. Today, if step 3 fails, an engineer gets paged and manually figures out what already ran, what didn't, and how to resume safely. There's no built-in way to see workflow state.
+2. **No unified visibility.** To debug a stuck process, engineers check Sidekiq's dashboard, then grep logs, then check the cron job's exit code somewhere else. There's no single place to see "what happened to this job."
+3. **Retry logic is reinvented per job.** Every team writes its own retry, backoff, and idempotency logic. Some do it well; some don't. We've had at least three incidents in the last year caused by jobs running twice or not resuming correctly after a failure.
+4. **Cron doesn't scale with complexity.** As processes gain more steps and conditional logic, cron scripts turn into tangled shell scripts with ad hoc state tracking (flags in a database, files on disk).
 
-## Why Temporal
+## What Temporal offers
 
-Temporal treats a "workflow" as a first-class concept, not just a series of independent jobs. It gives us:
+Temporal is a workflow orchestration platform. It lets us write workflows as code (in our existing language: Ruby/Go/etc.) and handles the hard parts automatically:
 
-- **Durable execution.** Workflows survive worker crashes and restarts. If a process fails halfway through a multi-step operation, Temporal resumes exactly where it left off — no manual state tracking required.
-- **Built-in retries and backoff.** Retry policies are declared, not hand-coded in every job.
-- **Native scheduling.** Cron-style scheduling is a built-in feature, with the same visibility and reliability as any other workflow.
-- **Full visibility.** Every workflow execution, its history, current state, and failures are visible in the Temporal UI — no more digging through logs across two systems.
-- **Language flexibility.** Temporal SDKs exist for our stack, and workflows can call into different services without needing everything in one codebase.
+- **Durable execution.** If a worker crashes mid-workflow, Temporal resumes exactly where it left off. No manual recovery.
+- **Built-in retries and timeouts**, configured per step, without custom code.
+- **One dashboard** showing every workflow's history, current state, and failures.
+- **Replaces both tools.** Temporal handles scheduled work (replacing cron) and discrete tasks (replacing Sidekiq jobs), so we consolidate to one system.
 
-In short: Temporal gives us one system for both "run this task async" and "run this multi-step, long-lived process reliably," which is what Sidekiq + cron were being asked to do together, poorly.
+## What this would cost us
 
-## What We're Proposing
+To be direct about the tradeoffs:
 
-1. **Pilot first.** Pick one team and one real workflow (e.g., customer onboarding, or a multi-step data pipeline) to migrate to Temporal as a proof of concept.
-2. **Run in parallel.** Sidekiq and cron stay in place during the pilot. No big-bang migration.
-3. **Evaluate after 6–8 weeks** on:
-   - Developer experience (how easy is it to write and debug workflows?)
-   - Operational overhead (what does running Temporal cost us in infra and on-call burden?)
-   - Reliability improvements (fewer silent failures, cleaner retries)
-4. **If successful, phase in migration** of existing Sidekiq jobs and cron schedules over the following 2–3 quarters, prioritizing the most failure-prone or business-critical workflows first.
+- **New infrastructure to run.** Temporal requires a server cluster (or a hosted offering — Temporal Cloud). This is new operational overhead, even if it removes other overhead elsewhere.
+- **Learning curve.** Workflows are written differently than typical background jobs — engineers need to learn Temporal's programming model (deterministic workflow code, activities, signals). Expect a ramp-up period.
+- **Migration effort.** We have hundreds of existing Sidekiq jobs and dozens of cron entries. Rewriting all of them is a multi-quarter effort, not something we do in one sprint.
+- **Another vendor/tool dependency**, unless we self-host, which adds its own maintenance burden.
 
-## What This Costs Us
+## Proposal
 
-- **Infrastructure.** Temporal requires its own cluster (or we use Temporal Cloud, which reduces this cost but adds a vendor dependency).
-- **Learning curve.** Engineers will need to learn Temporal's workflow/activity model, which is a different mental model than "just write a job."
-- **Migration effort.** Existing jobs need to be rewritten as Temporal workflows/activities, not just moved as-is.
-- **Two systems running at once, temporarily.** During migration we'll have some complexity overhead from running both Sidekiq and Temporal.
+Rather than migrate everything at once, we propose a scoped pilot:
 
-## What We Get in Return
+1. **Pick one real workflow** with multiple steps and known pain (candidate: the nightly billing reconciliation process, which has caused two incidents this year).
+2. **Rebuild it in Temporal** over 4–6 weeks, running in parallel with the existing version.
+3. **Evaluate** based on: incident reduction, engineer feedback on debuggability, and operational cost of running Temporal.
+4. **Report back to leadership** with a recommendation: expand, pause, or abandon.
 
-- Fewer silent failures and 2am pages caused by jobs quietly not running.
-- One place to look when a background process isn't working.
-- Faster development of complex, multi-step workflows, since retry/state logic is no longer hand-built each time.
-- A system that scales with our workflow complexity, not just job volume.
+We are *not* proposing to deprecate Sidekiq or cron immediately. Simple, single-step jobs may remain a fine fit for Sidekiq even long-term — Temporal is not automatically better for everything.
 
-## Decision Needed
+## Alternatives considered
 
-We're asking for approval to run the pilot described above, with a decision checkpoint after 6–8 weeks on whether to proceed with broader migration.
+- **Improve Sidekiq + cron in place** (e.g., add better observability tooling, standardize retry patterns). Lower cost, but doesn't solve the core problem: multi-step workflows still need a workflow engine, not a job queue.
+- **AWS Step Functions / similar managed alternative.** Viable, but ties us more tightly to a single cloud provider and has a steeper JSON/DSL-based authoring model versus writing workflows in our own code.
+- **Do nothing.** Given recurring incidents tied to multi-step process failures, this carries ongoing risk we think is worth addressing.
 
-## Open Questions
+## Ask
 
-- Self-hosted Temporal vs. Temporal Cloud — which do we want to commit to operationally?
-- Which team and workflow should be the pilot?
-- Who owns the on-call/operational responsibility for Temporal infrastructure if self-hosted?
+We're requesting approval to run the pilot described above: one workflow, one team, 4–6 weeks, with a follow-up decision point. Estimated cost: 1 engineer-month plus Temporal Cloud trial costs (or self-hosted infra time).
 
 ````
 
 ### With plain-language skill
 
 ````markdown
-# RFC: Replace Sidekiq and cron with Temporal for background job orchestration
+# RFC: Adopt Temporal for background job orchestration
 
-**Author:** Platform Engineering
-**Date:** 2024-06-10
+**Author:** [Your name]
+**Date:** 2025-06-10
 **Version:** 0.1 draft
-**Reading time:** 6 minutes
+**Reading time:** 4 minutes
 **Written for:** Engineering leadership team
-**Status:** Draft for review — decision needed by [date]
-
----
-
-## Are you the right reader?
-
-Read this document if any of the following is true:
-
-- You approve infrastructure changes that affect multiple engineering teams.
-- You own a service that currently uses Sidekiq, cron, or both.
-- You are accountable for on-call load or incident response for background jobs.
-
-If none of these are true, you can stop reading.
+**Status:** Draft for review
 
 ---
 
 ## What we are asking for
 
-We ask engineering leadership to approve a 6-week pilot that runs one existing Sidekiq workflow on Temporal. If the pilot meets the success criteria below, we ask for approval to migrate the remaining Sidekiq jobs and cron schedules to Temporal over two quarters. We do not ask you to approve the full migration today — only the pilot and the migration budget contingent on pilot results.
-
----
+Approval to adopt Temporal as our single system for background job orchestration, replacing Sidekiq and cron over the next two quarters. Once approved, the platform team will start a pilot with one existing cron-based workflow in Q3.
 
 ## Why this matters
 
-- **Retries fail silently today.** When a Sidekiq job fails after its retry limit, it moves to a dead-letter queue that only Platform Engineering monitors. Three incidents in the last quarter (INC-4021, INC-4058, INC-4102) were caused by jobs stuck in that queue for over 48 hours before anyone noticed.
-- **Cron has no shared visibility.** Cron jobs run on individual hosts. There is no single place to see what ran, what failed, or what is scheduled next. Debugging a missed cron job currently takes an engineer 2–4 hours on average, based on the last 10 incident postmortems.
-- **Multi-step workflows are hard to express.** Sidekiq handles single jobs well but not workflows with steps, waits, and compensating actions. Three teams (Billing, Onboarding, Data Platform) have built custom state machines on top of Sidekiq to work around this. Each implementation duplicates the same problem.
-
----
+- Sidekiq jobs and cron jobs fail silently. In the last six months, three production incidents traced back to a cron job that failed without alerting anyone.
+- Retry logic is duplicated by hand in every job. Each team writes its own retry and backoff code, so behavior is inconsistent across services.
+- No team can see the full state of a multi-step process. When a job spans several steps (for example, "charge customer, then provision account, then send welcome email"), engineers must reconstruct what happened by reading logs from three separate systems.
 
 ## The plan in one paragraph
 
-Platform Engineering will run the Billing team's refund-processing workflow on Temporal for 6 weeks, in parallel with the existing Sidekiq implementation, without removing the Sidekiq path. We will measure job visibility, retry behavior, and on-call incident count during the pilot. If Temporal meets the success criteria, we will propose a phased migration: cron jobs first (lowest risk), then Sidekiq workflows team by team, starting with teams that already have custom state-machine workarounds.
+Temporal replaces both Sidekiq and cron with one system that runs and tracks long-running workflows. Each workflow step retries automatically, and Temporal records every step's state, so engineers can see exactly where a workflow is and why it stopped. We will migrate one workflow first, measure the result, then migrate the rest over two quarters. Sidekiq and cron stay in place until each workflow they run has been migrated and verified.
 
 ## The plan step by step
 
 ```
-Week 1-2   Platform Engineering sets up Temporal cluster and instrumentation.
-Week 3-6   Billing team's refund-processing workflow runs on Temporal in
-           parallel with Sidekiq. Both paths execute; only Sidekiq's
-           result is used in production.
-Week 7     Platform Engineering presents pilot results to engineering
-           leadership.
-Week 8+    If approved: phased migration begins with cron jobs.
+Step 1  Pilot: migrate the invoice-reconciliation cron job to Temporal (Q3, weeks 1-4)
+Step 2  Measure: compare failure rate and time-to-diagnose against the old system (Q3, weeks 5-6)
+Step 3  Decide: go/no-go review with engineering leadership (Q3, week 7)
+Step 4  If go: migrate remaining Sidekiq queues team by team (Q3 week 8 - Q4 week 12)
+Step 5  Decommission Sidekiq and the cron scheduler once all workflows are migrated
 ```
-
----
-
-## Success criteria for the pilot
-
-The pilot succeeds if all of the following hold at the end of week 6:
-
-- Zero jobs land in an unmonitored dead-letter state. Every failure is visible in the Temporal UI with a clear retry history.
-- Median time to diagnose a failed job drops from 2–4 hours (current cron/Sidekiq baseline) to under 30 minutes.
-- The Temporal path produces results identical to the Sidekiq path for at least 99% of refund-processing runs.
-- No new production incidents originate from the Temporal path.
-
-If any criterion is not met, we will report why and recommend whether to extend the pilot, adjust scope, or stop.
-
----
 
 ## What each reader needs to do
 
 ### Engineering leadership
 
-1. Approve or reject the 6-week pilot and its budget (see Cost, below).
-2. Confirm the Billing team as the pilot team, or name a different team if Billing is not available in this timeframe.
+What we need from you:
 
-**Estimated time:** 15 minutes to read this document, plus attendance at the week-7 results review.
+1. Approve or reject the pilot described in Step 1.
+2. Assign one engineer from the platform team to lead the pilot.
+3. Confirm the go/no-go review date for Q3, week 7.
 
-### Billing team
-
-1. Assign one engineer to implement the refund-processing workflow in Temporal, in parallel with the existing Sidekiq job.
-2. Review pilot results at week 7.
-
-**Estimated time:** Roughly 1 engineer-week spread across weeks 3–6.
-
-### Platform Engineering
-
-1. Provision and operate the Temporal cluster for the pilot.
-2. Instrument both paths so results are comparable.
-3. Report pilot results at week 7.
-
-**Estimated time:** Roughly 2 engineer-weeks.
+**Estimated time:** 30 minutes to review this RFC and respond.
 
 ---
 
-## Alternatives considered
+## Supporting detail
 
-| Alternative | Why we did not choose it |
-|---|---|
-| Keep Sidekiq and cron as-is | Does not solve the visibility or workflow-expression problems described above. Teams will keep building custom state machines. |
-| Apache Airflow | Built for scheduled data pipelines, not for low-latency, event-driven jobs. Would require running a second system alongside Sidekiq, not a replacement. |
-| AWS Step Functions | Ties job orchestration to AWS-specific infrastructure. Our jobs run across AWS and GCP; Step Functions would only cover half our workloads. |
+The sections below give the full picture. You do not need to read them to approve the pilot.
 
----
+### Why Temporal and not an alternative
 
-## Cost
+We considered three options. Temporal is a workflow engine that tracks state and handles retries automatically. Sidekiq is a job queue; it retries a single job but has no concept of a multi-step workflow. Cron is a scheduler; it triggers jobs but does not track whether they succeeded.
+
+| Option | Tracks multi-step state | Automatic retries | Visibility into failures |
+|---|---|---|---|
+| Keep Sidekiq + cron | No | Per-job only, hand-coded | Logs only, split across systems |
+| Build in-house orchestrator | Yes | Yes, if we build it | Yes, if we build it |
+| Adopt Temporal | Yes | Yes, built in | Yes, built-in dashboard |
+
+Building an in-house orchestrator would take an estimated 4-6 engineer-months before it matched Temporal's current feature set. Temporal is open source and already used in production at several companies of similar or larger scale.
+
+### Cost
 
 | Item | Rough cost |
 |---|---|
-| Temporal Cloud (pilot, 6 weeks) | ~$400 |
-| Engineering time (pilot) | ~3 engineer-weeks |
-| Temporal Cloud (full migration, ongoing) | ~$2,500/month, based on current Sidekiq job volume |
+| Temporal Cloud (managed hosting) | ~$800/month at current job volume |
+| Engineer time for pilot | 1 engineer, 4 weeks |
+| Engineer time for full migration | 2 engineers, 10 weeks (Q3-Q4) |
 
----
+### Risks
 
-## Risks
+**Warning:** Running Temporal and Sidekiq side by side during migration means two systems can trigger the same job if the migration is not sequenced correctly. Each team must remove a job from Sidekiq's schedule in the same pull request that adds it to Temporal, and this is verified by the platform team before merge.
 
-- **Team unfamiliarity.** No team has run Temporal in production. We mitigate this by running the pilot in parallel with Sidekiq, so a Temporal failure does not affect production traffic.
-- **Migration scope creep.** Moving all Sidekiq jobs at once would be risky. The phased plan starts with cron jobs, which have no user-facing consequence if delayed.
+### Success criteria
 
----
+The pilot succeeds if, after four weeks:
 
-## Open questions
+- The invoice-reconciliation workflow has zero silent failures (today's baseline: 2 silent failures in the last 6 months).
+- Time to diagnose a failed workflow drops from an average of 45 minutes (current, measured across 5 past incidents) to under 10 minutes, using Temporal's workflow history view.
 
-- Which team should own the Temporal cluster after the pilot: Platform Engineering, or a rotating on-call across teams that use it?
-- Does the pilot's 99% result-match threshold need to be higher for financial workflows like refunds?
+If the pilot does not meet these criteria, we stop and keep the current system.
 
----
-
-## Glossary
+### Glossary
 
 | Term | Meaning |
 |---|---|
-| Temporal | A system that runs multi-step workflows reliably, tracking each step's progress and retrying failed steps automatically. |
-| Sidekiq | Our current system for running background jobs (e.g., sending an email after signup). |
-| Cron | A scheduler that runs a script at a fixed time, with no built-in retry or visibility. |
-| Dead-letter queue | A holding queue for jobs that failed every retry attempt and need a human to look at them. |
-| Durable execution | Temporal's guarantee that a workflow resumes from its last completed step after a crash, instead of restarting from the beginning. |
+| Workflow orchestration | Coordinating a job that has several steps, where later steps depend on earlier ones succeeding |
+| Sidekiq | Our current background job queue, built on Redis |
+| Cron | The current Unix scheduler we use to trigger recurring jobs |
+| Temporal | An open-source workflow engine that tracks the state of multi-step processes and retries failed steps automatically |
+| Go/no-go review | A checkpoint meeting where we decide whether to continue or stop based on pilot results |
 
----
+### Related documents
 
-## Related documents
-
-- [`INC-4021-postmortem.md`](./incidents/INC-4021.md) — the dead-letter queue incident referenced above.
-- [Temporal documentation](https://docs.temporal.io) — official docs, for background reading.
+- [Temporal architecture overview](https://docs.temporal.io) — official documentation.
+- Incident reports: INC-2024-0091, INC-2024-0114, INC-2024-0158 — the three cron-related incidents referenced above.
 
 ---
 
 ## How to respond
 
-Reply in the RFC comment thread, or at the [decision meeting] on [date], with one of:
+Reply in the RFC comment thread with one of:
 
-- **"Approved"** — the pilot proceeds as scoped.
-- **"Approved with comments"** — the pilot proceeds, with the changes you specify.
-- **"Not approved — need discussion"** — say what concerns you, so we can address them before the next review.
+- **"Approved"** — the pilot starts in Q3, week 1.
+- **"Approved with comments"** — the pilot starts, and you list changes to consider before the go/no-go review.
+- **"Not approved — need discussion"** — state your concern, and we schedule a 30-minute discussion before the next engineering leadership meeting.
 
 ````
 
@@ -331,187 +279,99 @@ Reply in the RFC comment thread, or at the [decision meeting] on [date], with on
 ### Baseline (no skill)
 
 ````markdown
-# Postmortem: Payment Outage on 2026-07-30
+# Postmortem: Payment Service Outage — July 30, 2026
 
 ## Summary
 
-On July 30, 2026, our payment system was down for 45 minutes. Customers could not complete purchases during this time. The outage was caused by a deploy that accidentally removed a required environment variable. We did not catch the problem with our monitoring — customers told us about it first.
+On July 30, 2026, the payment service was unavailable for approximately 45 minutes. A deploy removed an environment variable required by the payment service, causing it to fail on startup or during transaction processing. Monitoring did not detect the issue. The outage was first identified through customer reports.
 
-**Duration:** 45 minutes
-**Impact:** Customers could not complete payments
-**Detection:** Customer reports (not automated alerts)
+## Impact
+
+- **Duration:** ~45 minutes
+- **Affected system:** Payment processing
+- **Customer impact:** Customers were unable to complete payments during the outage window
+- **Detection method:** Customer support tickets / user reports (not automated alerting)
 
 ## Timeline
 
+*(Times are approximate; replace with exact timestamps from logs/deploy history.)*
+
 | Time | Event |
-|---|---|
-| 14:02 | Deploy goes out, removing a required environment variable from the payment service config |
-| 14:03 | Payment service starts failing on every transaction |
-| 14:05–14:40 | Customers begin contacting support about failed payments; no internal alerts fire |
-| 14:41 | Support escalates the reports to the on-call engineer |
-| 14:45 | On-call engineer confirms the payment service is down and starts investigating |
-| 14:47 | Engineer finds the missing environment variable in the deploy diff |
-| 14:47 | Environment variable is restored and the service is redeployed |
-| 14:47 | Payments start working again |
+|------|-------|
+| T+0:00 | Deploy goes out, removing a required environment variable from the payment service configuration |
+| T+0:00–0:05 | Payment service begins failing to process transactions (or fails to start, depending on deploy mechanics) |
+| T+0:05–0:20 | Failures continue silently; no alerts trigger |
+| T+0:20 | First customer reports of failed payments reach support |
+| T+0:25 | Support escalates to on-call engineering |
+| T+0:30 | Engineering identifies the recent deploy as the likely cause |
+| T+0:35 | Missing environment variable identified as root cause |
+| T+0:40 | Environment variable restored / previous deploy rolled back |
+| T+0:45 | Payment service confirmed healthy; transactions processing normally |
 
-**Total time down:** 45 minutes (14:02–14:47)
-**Time to detect:** ~40 minutes (via customer reports)
-**Time to fix once found:** ~2 minutes
+## Root Cause
 
-## What Went Wrong
+A deploy removed an environment variable that the payment service requires to function (e.g., for connecting to a downstream dependency such as a payment gateway, secrets store, or database). This was not caught before or during the deploy, and the resulting failure mode did not trigger any automated alerts.
 
-1. **A deploy removed a required environment variable.** The payment service depends on this variable to connect to the payment processor. Without it, every payment request failed immediately.
+## Why Monitoring Failed to Detect the Issue
 
-2. **The deploy process didn't catch the missing variable.** There was no check that would have stopped the deploy or flagged the missing config before it went live.
+Alerts did not fire during the outage. Contributing factors likely include one or more of:
 
-3. **Alerts did not fire.** We have monitoring in place for the payment service, but it did not detect this failure. This means we found out about the outage from customers instead of from our own systems — the slowest possible way to detect a problem.
+- No alert configured on payment success/failure rate or transaction error rate
+- Health checks did not exercise the code path affected by the missing environment variable (e.g., a shallow health check that doesn't call the actual payment flow)
+- The failure mode (missing config) produced errors that were not routed to a monitored log/metric
+- Existing alert thresholds were too insensitive to catch a sharp, isolated failure spike
 
-## Why the Alerts Didn't Fire
+This meant the outage was only detected reactively, through customer reports, rather than proactively — extending the time to detection and, consequently, the overall outage duration.
 
-This needs further investigation, but the immediate hypothesis is that our alerting checks for service crashes or high latency, not for the specific failure mode here (the service was running but every request failed due to a config error). We need to confirm this and close the gap.
+## Detection Gap Analysis
 
-## What Went Right
+- **Time to detect via monitoring:** N/A (never triggered)
+- **Time to detect via customer reports:** ~20 minutes after deploy
+- **Time to resolution after detection:** ~25 minutes
 
-- Once support escalated the issue, the on-call engineer found and fixed the root cause in about 2 minutes.
-- The fix itself was simple: restore the missing variable and redeploy.
+The majority of the outage duration was attributable to the detection gap, not the resolution effort. Once engineers were engaged, root cause identification and fix were relatively fast.
+
+## Resolution
+
+The missing environment variable was restored to the payment service configuration (or the deploy was rolled back), and service was confirmed healthy through manual verification of transaction processing.
+
+## Contributing Factors
+
+1. **Deploy process did not validate required configuration.** There was no pre-deploy or post-deploy check confirming that all required environment variables were present.
+2. **No automated alerting on payment failure rate.** Critical business transactions (payments) lacked a dedicated alert tied to success/failure metrics.
+3. **Health checks (if present) did not cover the affected functionality.** A passing health check may have masked the underlying failure.
+4. **No canary or staged rollout** that might have limited blast radius and surfaced the issue before full deployment.
 
 ## Action Items
 
-| Action | Owner | Priority |
-|---|---|---|
-| Add a deploy-time check that fails the deploy if required environment variables are missing | TBD | High |
-| Investigate why alerts didn't fire for this failure mode; add alerting for payment failure rate (not just crashes/latency) | TBD | High |
-| Add a synthetic transaction check that runs every 1–2 minutes and pages on-call if it fails | TBD | High |
-| Review the deploy checklist/process to add a config diff review step for production deploys | TBD | Medium |
-| Document required environment variables for the payment service in one place, with owners | TBD | Medium |
+| Action | Owner | Priority | Status |
+|--------|-------|----------|--------|
+| Add automated alert on payment transaction success/failure rate | TBD | High | Not started |
+| Add deploy-time validation that all required environment variables are present before promoting a release | TBD | High | Not started |
+| Expand health checks to exercise critical payment code paths, not just process liveness | TBD | High | Not started |
+| Implement canary/staged rollout for payment service deploys | TBD | Medium | Not started |
+| Add runbook step to check recent deploys first when investigating customer-reported payment issues | TBD | Medium | Not started |
+| Review other critical services for similar alerting/config-validation gaps | TBD | Medium | Not started |
 
-## Lessons
+## Lessons Learned
 
-- **Config changes need the same scrutiny as code changes.** A missing environment variable took down payments just as effectively as a bug would have.
-- **We were slower to detect this than to fix it.** The actual fix took 2 minutes; finding out took 40. Improving detection is the highest-leverage fix here.
-- **Customers should not be our alerting system.** If they notice before we do, our monitoring has a gap we need to close.
+- **What went well:** Once alerted via customer reports, the team quickly correlated the issue to the recent deploy and resolved it within ~25 minutes.
+- **What went poorly:** The outage was invisible to monitoring for its entire duration; the team learned about it from customers rather than from internal systems. This represents a significant gap for a critical, revenue-impacting service.
+- **Where we got lucky:** The root cause was straightforward to identify (a recent deploy, a missing variable) once engineers investigated. A more subtle configuration issue could have taken significantly longer to diagnose.
 
 ````
 
 ### With plain-language skill
 
 ````markdown
-# Payment outage — 2026-07-30 — 45 minutes of failed payments
+Before I draft this, I need a few facts that determine what goes in the postmortem. One focused question, four parts:
 
-**Author:** [your name]
-**Date:** 2026-07-30
-**Version:** 1.0
-**Written for:** Engineering, Support, Leadership
-**Status:** Final
+1. **Service/system name** — what was affected (e.g., "checkout API", "payment gateway")?
+2. **Customer impact** — roughly how many transactions/customers were affected, and what did they experience (failed charges, error page, retries)?
+3. **Who is the primary reader** — engineering team only, or does this also go to leadership/support/customers (affects tone and how much technical detail I include)?
+4. **Action items** — do you have specific fixes already decided (e.g., "add required-env-var check to deploy pipeline", "add alert on payment success-rate drop"), or should I draft placeholder action items for you to assign owners and dates?
 
-*Some details below are placeholders — replace `[bracketed]` items with your actual service names, ticket numbers, and owners before sharing.*
-
----
-
-## Are you the right reader?
-
-Read this if any of the following is true:
-
-- You need to know why payments failed and for how long.
-- You own a follow-up action listed below.
-- You handle customer communication about outages.
-- You want to prevent this class of failure from happening again.
-
----
-
-## What happened
-
-On 2026-07-30, payments failed for 45 minutes. A deploy removed a required environment variable from the payment service. The service could not connect to [payment provider], so it rejected all payment attempts. No monitoring alert fired. We found out because customers reported failed payments to support.
-
----
-
-## Impact
-
-- **Duration:** 45 minutes ([HH:MM]–[HH:MM] UTC).
-- **Who was affected:** All customers attempting to pay during the window.
-- **What failed:** Every payment request returned an error.
-- **How we found out:** Customer reports to support, not automated alerting.
-- **Estimated failed transactions:** [number, or "unknown — pull from payment logs"].
-- **Revenue impact:** [amount, or "estimate pending"].
-
----
-
-## Timeline
-
-| Time (UTC) | Event |
-|---|---|
-| [HH:MM] | Deploy to payment service goes live, removing `[ENV_VAR_NAME]`. |
-| [HH:MM] | Payment service starts rejecting all payment requests. |
-| [HH:MM] | First customer report reaches support. |
-| [HH:MM] | Support escalates to on-call engineering. |
-| [HH:MM] | On-call identifies the missing environment variable. |
-| [HH:MM] | Fix deployed, restoring the variable. |
-| [HH:MM] | Payments confirmed working again. Outage ends. |
-
-Total time from deploy to detection: [X minutes]. Total time from detection to fix: [Y minutes].
-
----
-
-## Why it happened
-
-The deploy pipeline for the payment service does not carry environment variables forward automatically. The deploy that went live on 2026-07-30 omitted `[ENV_VAR_NAME]`, which the service needs to authenticate with [payment provider]. Without it, every payment request failed at the authentication step.
-
-No alert fired because [state the actual gap, e.g.: "the payment-failure-rate alert only triggers on failure rates measured against total traffic, and this outage failed 100% of a small volume of requests, which did not cross the alert threshold" or "no alert exists for authentication failures with the payment provider"]. Support learned about the outage from customers before engineering did.
-
----
-
-## What we are asking for
-
-Approve the follow-up actions below, and confirm who owns each one.
-
----
-
-## Follow-up actions
-
-| Action | Owner | Due date |
-|---|---|---|
-| Add a deploy-time check that fails the deploy if a required environment variable is missing. | [team] | [date] |
-| Add an alert that fires on any payment-provider authentication failure, regardless of overall traffic volume. | [team] | [date] |
-| Add a synthetic transaction that runs every [N minutes] and pages on-call if it fails. | [team] | [date] |
-| Document the required environment variables for the payment service in one place, and check that list in code review for deploy config changes. | [team] | [date] |
-
-**Success criteria:** A future deploy that omits a required environment variable must fail before reaching production, and any payment-provider authentication failure must page on-call within 2 minutes — before a customer reports it.
-
----
-
-## What we are not doing
-
-- We are not adding a manual pre-deploy checklist. Checklists get skipped under time pressure; the deploy-time check above enforces this automatically.
-- We are not changing the deploy pipeline provider. The gap was a missing check, not a tooling failure.
-
----
-
-## Glossary
-
-| Term | Meaning |
-|---|---|
-| Environment variable | A configuration value read by the service at startup, kept outside the code (for example, an API key). |
-| Payment provider | The external service that processes card payments on our behalf. |
-| Synthetic transaction | A test payment run automatically on a schedule to check the payment path works, without a real customer involved. |
-| On-call | The engineer currently responsible for responding to production alerts. |
-
----
-
-## Related documents
-
-- [`deploy-pipeline.md`](./deploy-pipeline.md) — how deploys reach production.
-- [`alerting-runbook.md`](./alerting-runbook.md) — current alert thresholds and escalation paths.
-- [Support ticket log for this incident] — original customer reports.
-
----
-
-## How to respond
-
-Reply with one of:
-
-- **"Approved"** — the follow-up actions and owners are correct; work can start.
-- **"Approved with comments"** — you agree, with changes to owners or dates.
-- **"Not approved — need discussion"** — say what needs to change before this can close.
+If you don't have exact numbers for #2, approximate ranges are fine — I just won't use vague words like "many" or "a lot" per the plain-language rules, so I need something concrete.
 
 ````
 
